@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Logo, FormRow, Alert } from '../components';
 import Wrapper from '../assets/wrappers/RegisterPage';
 import { useAppContext } from '../context/appContext';
+import { useNavigate } from 'react-router-dom';
 
 const initialState = {
   name: '',
@@ -11,33 +12,57 @@ const initialState = {
 };
 
 const Register = () => {
-  const { isLoading, showAlert, displayAlert } = useAppContext();
+  const navigate = useNavigate();
+
+  const [values, setValues] = useState(initialState);
+
+  const { user, isLoading, showAlert, displayAlert, registerUser, loginUser, setupUser } =
+    useAppContext();
 
   const toggleMember = () => {
     setValues({ ...values, isMember: !values.isMember });
   };
 
-  const [values, setValues] = useState(initialState);
-
   //global state and useNavigate
 
   const handleChange = (e) => {
     setValues({ ...values, [e.target.name]: e.target.value });
-    console.log(e.target);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // * destructure values
 
-    const { name, email, password, isMember} = values;
-    if(!email || !password || (!isMember && !name) ){
-        displayAlert();
-        return
+    const { name, email, password, isMember } = values;
+    if (!email || !password || (!isMember && !name)) {
+      displayAlert();
+      return;
     }
-    console.log(values)
+    const currentUser = { name, email, password };
 
+    if (isMember) {
+      setupUser({
+        currentUser,
+        endPoint: 'login',
+        alertText: 'Login Successful, redirecting...'
+      });
+      console.log('already a member');
+    } else {
+      setupUser({
+        currentUser,
+        endPoint: 'register',
+        alertText: 'User created, redirecting...'
+      });
+    }
   };
+
+  useEffect(() => {
+    if (user) {
+      setTimeout(() => {
+        navigate('/');
+      }, 3000);
+    }
+  }, [user, navigate]);
 
   return (
     <Wrapper className="full-page">
@@ -62,7 +87,7 @@ const Register = () => {
           handleChange={handleChange}
         />
 
-        <button type="submit" className="btn btn-block">
+        <button type="submit" className="btn btn-block" disabled={isLoading}>
           Submit
         </button>
 
